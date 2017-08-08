@@ -64,8 +64,7 @@ public class ZoomableImageView extends AppCompatImageView{
         this.context = context;
         mScaleDetector = new ScaleGestureDetector(context, new MyScaleListener());
 
-        //matrix.setTranslate(1f, 1f);
-
+        matrix.setTranslate(1f, 1f);
         matrixValues = new float[9];
         setImageMatrix(matrix);
         setScaleType(ScaleType.MATRIX);
@@ -75,8 +74,8 @@ public class ZoomableImageView extends AppCompatImageView{
             public boolean onTouch(View v, MotionEvent event) {
                 mScaleDetector.onTouchEvent(event);
                 matrix.getValues(matrixValues);
-                float x = matrixValues[Matrix.MTRANS_X];
-                float y = matrixValues[Matrix.MTRANS_Y];
+                float translateX = matrixValues[Matrix.MTRANS_X];
+                float translateY = matrixValues[Matrix.MTRANS_Y];
                 int action = event.getAction() & MotionEvent.ACTION_MASK;
 
                 PointF currentPoint = new PointF(event.getX(), event.getY());
@@ -88,6 +87,15 @@ public class ZoomableImageView extends AppCompatImageView{
                         break;
 
                     case MotionEvent.ACTION_UP:
+
+                        int diffX = (int) Math.abs(currentPoint.x - start.x);
+                        int diffY = (int) Math.abs(currentPoint.y - start.y);
+
+                        if(diffX < 3 && diffY < 3) {
+                            performClick();
+                        }
+
+
                         break;
 
                     case MotionEvent.ACTION_MOVE:
@@ -129,12 +137,25 @@ public class ZoomableImageView extends AppCompatImageView{
                         }
 
                         if(limitY) {
-
+                            if(translateY + deltaY >  0) {
+                                deltaY = -translateY;
+                            }
+                            else if(translateY + deltaY < -bottom) {
+                                deltaY = -(translateY + bottom);
+                            }
                         }
 
                         if(limitX) {
-
+                            if(translateX + deltaX > 0) {
+                                deltaX -= translateX;
+                            }
+                            else if(translateX + deltaX < -right) {
+                                deltaX = -(translateX + right);
+                            }
                         }
+
+                        matrix.postTranslate(deltaX, deltaY);
+                        last.set(currentPoint.x, currentPoint.y);
 
                         break;
 
@@ -142,7 +163,11 @@ public class ZoomableImageView extends AppCompatImageView{
                         last.set(event.getX(), event.getY());
                         start.set(last);
                         break;
+                    case MotionEvent.ACTION_POINTER_UP:
+                        break;
                 }
+                setImageMatrix(matrix);
+                invalidate();
                 return true;
             }
         });
@@ -179,10 +204,28 @@ public class ZoomableImageView extends AppCompatImageView{
         setImageMatrix(matrix);
     }
 
-    private static class MyScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+    private  class MyScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            Log.i("ON_SCALE_MY_LISTENER", "ON_SCALE");
+            float scaleFactor = detector.getScaleFactor();
+            Log.i("ON_SCALE_MY_LISTENER", String.format("ON_SCALE Scale Factor %f", scaleFactor));
+            float newScale = saveScale * scaleFactor;
+            Log.i("ON_SCALE_MY_LISTENER", String.format("New Scale %f", newScale));
+            if(newScale < maxScale && newScale > minScale) {
+                saveScale = newScale;
+                float width = getWidth();
+                float height = getHeight();
+                right = (originalWidth * saveScale) - width;
+                bottom = (originalHeight * saveScale) - height;
+                float scaleBitmapWidth = originalWidth * scaleFactor;
+                float scaleBitmapHeight = originalHeight* scaleFactor;
+                if(scaleBitmapWidth <= width || scaleBitmapHeight <= height) {
+                    matrix.postScale(scaleFactor, scaleFactor, width / 2, height / 2);
+                }
+                else {
+                    matrix.postScale(scaleFactor, scaleFactor, detector.getFocusX(), detector.getFocusY());
+                }
+            }
             return true;
         }
 
