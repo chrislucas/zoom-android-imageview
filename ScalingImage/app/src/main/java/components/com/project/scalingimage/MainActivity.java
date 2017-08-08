@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("MATRIX_SCALING", matrix.toString());
 
                 imageView.setImageMatrix(matrix);
-
+                imageView.invalidate();
                 float data [] = new float[9];
                 matrix.getValues(data);
 
