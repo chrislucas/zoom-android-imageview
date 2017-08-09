@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
                 originalScale   = (float) ((w*1.0)/(h*1.0));
                 originMidW      = ((float) (w*1.0)/ 2.0f);
                 originMidH      = ((float) (h*1.0)/ 2.0f);
-                Log.i("PRE_DRAW", String.format("(%d, %d)", w, h));
+                //Log.i("PRE_DRAW_IMAGEVIEW", String.format("(%d, %d)", w, h));
                 return true;
             }
         });
@@ -246,9 +246,6 @@ public class MainActivity extends AppCompatActivity {
         float y = event.getY(0) + event.getY(1);
         pointF.set( x/2.0f, y/2.0f);
     }
-
-
-
 
     @Override
     protected void onStart() {
