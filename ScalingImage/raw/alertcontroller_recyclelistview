@@ -1,0 +1,8 @@
+.AlertController.RecycleListView
+Uma classe interna
+public static class AlertController.RecycleListView extends ListView
+http://www.programcreek.com/java-api-examples/index.php?source_dir=touchtrack-lib-master/HoloEverywhereLib/src/com/WazaBe/HoloEverywhere/internal/AlertController.java
+
+
+https://stackoverflow.com/questions/42323704/what-is-alertcontroller-recyclelistview
+

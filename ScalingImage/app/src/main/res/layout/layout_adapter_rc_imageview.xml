@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/text_example"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        />
+
+    <components.com.project.scalingimage.views.ZoomableImageView
+        android:id="@+id/image_to_scaling_on_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/app_name"
+        android:scaleType="centerInside"
+        android:src="@drawable/penguins" />
+
+
+</LinearLayout>
