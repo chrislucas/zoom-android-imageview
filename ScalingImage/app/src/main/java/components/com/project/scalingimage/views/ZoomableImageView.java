@@ -410,8 +410,13 @@ public class ZoomableImageView extends AppCompatImageView {
                 distBottom = (imageViewHeightScaling * saveScaleZoom) - height;
                 float scaleBitmapWidth = imageViewWidthScaling * scaleFactor;
                 float scaleBitmapHeight = imageViewHeightScaling * scaleFactor;
-                Log.i("LISTENER_ACTION_MOVE", String.format("wh (%f %f)\n whs(%f %f)"
-                        , width, height, scaleBitmapWidth, scaleBitmapHeight));
+                Log.i("LISTENER_ACTION_MOVE", String.format("wh (%f %f)\n whs(%f %f)\nFactor (%f)"
+                        , width
+                        , height
+                        , scaleBitmapWidth
+                        , scaleBitmapHeight
+                        , scaleFactor
+                ));
                 if(scaleBitmapWidth < width || scaleBitmapHeight < height) {
                     matrix.postScale(scaleFactor, scaleFactor, width / 2, height / 2);
                 }
