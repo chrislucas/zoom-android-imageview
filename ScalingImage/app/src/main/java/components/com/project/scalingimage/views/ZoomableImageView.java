@@ -44,8 +44,8 @@ public class ZoomableImageView extends AppCompatImageView {
     private float saveScaleTransalation = 1f
             , saveScaleZoom = 1f;   // escala para executar o Zoom in
     private float
-              right                             // diferenca entre a imagem apos aplicar a operacao Scale e a largura da tela
-            , bottom                            // diferenca entre a imagem apos aplicar a operacao Scale e a altura da tela
+              distRight                          // distancia entre a imagem apos aplicar a operacao Scale e a largura da tela
+            , distBottom                        // distancia entre a imagem apos aplicar a operacao Scale e a altura da tela
             , imageViewWidthScaling             // Largura da imagem apos aplicar a operacao de Scale sobre a largura intrinseca da image
             , imageViewHeightScaling            // Altura da imagem apos aplicar a operacao de Scale sobre a altura intrinseca da image
             , mWidthImageView                   // Largura (raw/bruta) original da ImageView pega atraves do metodo getMeasuredWidth()
@@ -214,6 +214,7 @@ public class ZoomableImageView extends AppCompatImageView {
                     Log.i("ACTION_MOVE", String.format("ORIGIN-DIM(%d, %d)", imageViewWidth, imageViewHeight));
                     Log.i("ACTION_MOVE", String.format("SCALE-DIM(%f, %f)", proportionalWidth, proportionalHeight));
                     Log.i("ACTION_MOVE", String.format("Transalate (%f,%f)", translateX, translateY));
+                    Log.i("ACTION_MOVE", String.format("RB (%f,%f)", distRight, distBottom));
                     Log.i("ACTION_MOVE", "\n");
                     boolean restrictMovimentX  = false, restrictMovimentY  = false;
                     /**
@@ -252,8 +253,8 @@ public class ZoomableImageView extends AppCompatImageView {
                         if(translateY + deltaY >  0) {
                             deltaY = -translateY;
                         }
-                        else if(translateY + deltaY < -bottom) {
-                            deltaY = -(translateY + bottom);
+                        else if(translateY + deltaY < -distBottom) {
+                            deltaY = -(translateY + distBottom);
                         }
                     }
                     // movimento de cima para baixo
@@ -261,8 +262,8 @@ public class ZoomableImageView extends AppCompatImageView {
                         if(translateX + deltaX > 0) {
                             deltaX = -translateX;
                         }
-                        else if(translateX + deltaX < -right) {
-                            deltaX = -(translateX + right);
+                        else if(translateX + deltaX < -distRight) {
+                            deltaX = -(translateX + distRight);
                         }
                     }
                     Log.i("ACTION_MOVE", String.format("DEPOIS DELTAXY(%f, %f)", deltaX, deltaY));
@@ -405,11 +406,13 @@ public class ZoomableImageView extends AppCompatImageView {
                  * onMeasure
                  * */
                 //
-                right   = (imageViewWidthScaling * saveScaleZoom) - width;
-                bottom  = (imageViewHeightScaling * saveScaleZoom) - height;
+                distRight = (imageViewWidthScaling * saveScaleZoom) - width;
+                distBottom = (imageViewHeightScaling * saveScaleZoom) - height;
                 float scaleBitmapWidth = imageViewWidthScaling * scaleFactor;
                 float scaleBitmapHeight = imageViewHeightScaling * scaleFactor;
-                if(scaleBitmapWidth <= width || scaleBitmapHeight <= height) {
+                Log.i("LISTENER_ACTION_MOVE", String.format("wh (%f %f)\n whs(%f %f)"
+                        , width, height, scaleBitmapWidth, scaleBitmapHeight));
+                if(scaleBitmapWidth < width || scaleBitmapHeight < height) {
                     matrix.postScale(scaleFactor, scaleFactor, width / 2, height / 2);
                 }
                 else {
