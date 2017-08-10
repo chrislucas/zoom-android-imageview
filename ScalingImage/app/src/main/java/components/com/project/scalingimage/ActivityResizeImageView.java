@@ -18,7 +18,7 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
-public class MainActivity extends AppCompatActivity {
+public class ActivityResizeImageView extends AppCompatActivity {
 
     private ImageView imageView;
 
@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
     private void midPoint(PointF pointF, MotionEvent event) {
         float x = event.getX(0) + event.getX(1);
         float y = event.getY(0) + event.getY(1);
-        pointF.set( x/2.0f, y/2.0f);
+        pointF.set(x/2.0f, y/2.0f);
     }
 
     @Override

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="components.com.project.scalingimage.MainActivity">
+    tools:context="components.com.project.scalingimage.ActivityResizeImageView">
 
     <components.com.project.scalingimage.views.ZoomableImageView
         android:id="@+id/image_to_scaling_2"

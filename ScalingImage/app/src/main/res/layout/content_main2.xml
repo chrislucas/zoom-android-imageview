@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     android:orientation="vertical"
-    tools:context="components.com.project.scalingimage.Main2Activity"
+    tools:context="components.com.project.scalingimage.ActivityTextViewHTML"
     tools:showIn="@layout/activity_main2">
 
     <TextView

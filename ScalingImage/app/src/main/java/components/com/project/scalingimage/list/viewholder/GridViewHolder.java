@@ -7,16 +7,16 @@ import components.com.project.scalingimage.R;
 import components.com.project.scalingimage.views.ZoomableImageView;
 
 /**
- * Created by r028367 on 09/08/2017.
+ * Created by r028367 on 10/08/2017.
  */
 
-public class ZoomableViewHolder extends RecyclerView.ViewHolder {
+public class GridViewHolder extends RecyclerView.ViewHolder {
 
     private ZoomableImageView zoomableImageView;
 
-    public ZoomableViewHolder(View itemView) {
+    public GridViewHolder(View itemView) {
         super(itemView);
-        zoomableImageView = (ZoomableImageView) itemView.findViewById(R.id.image_to_scaling_on_list);
+        this.zoomableImageView = (ZoomableImageView) itemView.findViewById(R.id.image_to_scaling_on_list);
     }
 
     public ZoomableImageView getZoomableImageView() {

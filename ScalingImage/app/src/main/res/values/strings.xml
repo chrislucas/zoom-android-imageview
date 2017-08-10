@@ -2,6 +2,7 @@
     <string name="app_name">ScalingImage</string>
     <string name="action">acao</string>
     <string name="title_activity_main2">Main2Activity</string>
-    <string name="example_text_link">Esse é um texto que contém uma âncora<a href="https://www.google.com">Google It</a></string>
+    <string name="example_text_link">Esse é um texto que contém uma âncora <a href="https://www.google.com">Google It</a></string>
     <string name="title_activity_list_image">Imagens Redimensionaveis</string>
+    <string name="sample_title">Exemplo de titulo</string>
 </resources>

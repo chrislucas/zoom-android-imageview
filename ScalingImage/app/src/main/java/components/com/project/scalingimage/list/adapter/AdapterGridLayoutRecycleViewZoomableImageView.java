@@ -1,30 +1,25 @@
 package components.com.project.scalingimage.list.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
 import java.util.List;
 
-import components.com.project.scalingimage.R;
 import components.com.project.scalingimage.entities.Post;
-import components.com.project.scalingimage.list.viewholder.LinearViewHolder;
+import components.com.project.scalingimage.list.viewholder.GridViewHolder;
 
 /**
- * Created by r028367 on 09/08/2017.
+ * Created by r028367 on 10/08/2017.
  */
 
-public class AdapterRecycleViewZoomableImageView extends RecyclerView.Adapter<LinearViewHolder> {
+public class AdapterGridLayoutRecycleViewZoomableImageView extends RecyclerView.Adapter<GridViewHolder> {
 
     private List<Post> posts;
     private Context context;
 
-    public AdapterRecycleViewZoomableImageView(List<Post> posts, Context context) {
+    public AdapterGridLayoutRecycleViewZoomableImageView(List<Post> posts, Context context) {
         this.posts = posts;
         this.context = context;
     }
@@ -38,7 +33,7 @@ public class AdapterRecycleViewZoomableImageView extends RecyclerView.Adapter<Li
      * layout file.
      * <p>
      * The new ViewHolder will be used to display items of the adapter using
-     * {@link #onBindViewHolder(LinearViewHolder, int)} (ViewHolder, int, List)}. Since it will be re-used to display
+     * {@link #onBindViewHolder(GridViewHolder, int)} (ViewHolder, int, List)}. Since it will be re-used to display
      * different items in the data set, it is a good idea to cache references to sub views of
      * the View to avoid unnecessary {@link android.view.View#findViewById(int)} calls.
      *
@@ -47,13 +42,11 @@ public class AdapterRecycleViewZoomableImageView extends RecyclerView.Adapter<Li
      * @param viewType The view type of the new View.
      * @return A new ViewHolder that holds a View of the given view type.
      * @see #getItemViewType(int)
-     * @see #onBindViewHolder(LinearViewHolder, int) (ViewHolder, int)
+     * @see #onBindViewHolder(GridViewHolder, int) (ViewHolder, int)
      */
     @Override
-    public LinearViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(this.context).inflate(R.layout.layout_adapter_rc_imageview, parent, false);
-        LinearViewHolder linearViewHolder = new LinearViewHolder(view);
-        return linearViewHolder;
+    public GridViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        return null;
     }
 
     /**
@@ -69,7 +62,7 @@ public class AdapterRecycleViewZoomableImageView extends RecyclerView.Adapter<Li
      * on (e.g. in a click listener), use {@link android.support.v7.widget.RecyclerView.ViewHolder#getAdapterPosition()} which will
      * have the updated adapter position.
      * <p>
-     * Override {@link #onBindViewHolder(LinearViewHolder, int)} (ViewHolder, int, List)} instead if Adapter can
+     * Override {@link #onBindViewHolder(GridViewHolder, int)} (ViewHolder, int, List)} instead if Adapter can
      * handle efficient partial bind.
      *
      * @param holder   The ViewHolder which should be updated to represent the contents of the
@@ -77,11 +70,8 @@ public class AdapterRecycleViewZoomableImageView extends RecyclerView.Adapter<Li
      * @param position The position of the item within the adapter's data set.
      */
     @Override
-    public void onBindViewHolder(LinearViewHolder holder, int position) {
-        Post post = posts.get(position);
-        byte [] bufferImage = post.getBufferImage();
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bufferImage, 0, bufferImage.length);
-        holder.getZoomableImageView().setImageBitmap(bitmap);
+    public void onBindViewHolder(GridViewHolder holder, int position) {
+
     }
 
     /**
@@ -91,6 +81,6 @@ public class AdapterRecycleViewZoomableImageView extends RecyclerView.Adapter<Li
      */
     @Override
     public int getItemCount() {
-        return this.posts.size();
+        return 0;
     }
 }

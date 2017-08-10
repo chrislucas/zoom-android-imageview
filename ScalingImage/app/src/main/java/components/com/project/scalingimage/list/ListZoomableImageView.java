@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -21,10 +23,9 @@ import components.com.project.scalingimage.list.adapter.AdapterRecycleViewZoomab
 public class ListZoomableImageView extends AppCompatActivity {
 
     public static class RecycleItemClickListener implements RecyclerView.OnItemTouchListener {
-
         private OnItemClickListener onItemClickListener;
         private Context context;
-        private GestureDetector gestureDetector;
+        private GestureDetectorCompat gestureDetector;
         public interface OnItemClickListener {
             public void onItemClick(View view, int position);
         }
@@ -32,7 +33,7 @@ public class ListZoomableImageView extends AppCompatActivity {
         public RecycleItemClickListener(Context context, OnItemClickListener onItemClickListener) {
             this.context = context;
             this.onItemClickListener = onItemClickListener;
-            gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            gestureDetector = new GestureDetectorCompat(context, new GestureDetector.SimpleOnGestureListener() {
                     @Override
                     public boolean onSingleTapUp(MotionEvent e) {
                         return true;
@@ -125,14 +126,29 @@ public class ListZoomableImageView extends AppCompatActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
 
+        final Context context = this;
         RecycleItemClickListener.OnItemClickListener onItemClickListener = new RecycleItemClickListener.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
                 Post post = posts.get(position);
+                Toast.makeText(context, String.format("%s %d", post.toString(), position)
+                        , Toast.LENGTH_SHORT).show();
             }
         };
 
+        /**
+         * Criando uma implementacao de {@link RecycleItemClickListener.OnItemClickListener}
+         * para detectar toques num item da lista do RecycleView.
+         *
+         * Vamos usar a API de {@link GestureDetectorCompat} para detectar um toque na tela
+         * do dispositivo
+         *
+         * */
         RecycleItemClickListener recycleItemClickListener = new RecycleItemClickListener(this, onItemClickListener);
+
+        /**
+         *
+         * */
         recyclerView.addOnItemTouchListener(recycleItemClickListener);
     }
 }

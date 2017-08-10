@@ -77,10 +77,14 @@ public class Post implements Parcelable {
         }
     };
 
+    @Override
+    public String toString() {
+        return this.getBufferImage().toString();
+    }
 
     public static List<Post> getList(Context context, Drawable a, Drawable b) {
         List<Post> posts = new ArrayList<>();
-        for(int i=0; i<2; i++) {
+        for(int i=0; i<5; i++) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) ((i & 1) == 0 ? a : b);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Bitmap bitmap = bitmapDrawable.getBitmap();

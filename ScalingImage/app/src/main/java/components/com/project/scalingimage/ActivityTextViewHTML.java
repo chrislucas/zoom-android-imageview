@@ -10,7 +10,7 @@ import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
-public class Main2Activity extends AppCompatActivity {
+public class ActivityTextViewHTML extends AppCompatActivity {
 
 
     private TextView textView;
