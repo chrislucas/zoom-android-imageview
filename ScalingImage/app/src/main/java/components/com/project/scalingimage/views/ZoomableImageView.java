@@ -7,7 +7,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
-import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -23,6 +22,7 @@ import android.view.View;
 public class ZoomableImageView extends AppCompatImageView {
 
     private Matrix matrix = new Matrix();
+    private Matrix matrixDoubleTap = new Matrix();
 
     private static final int NONE   = 0;
     private static final int DRAG   = 1;
@@ -30,12 +30,12 @@ public class ZoomableImageView extends AppCompatImageView {
     private static final int CLICK  = 3;
     private int mode = NONE;
 
-    private PointF last     = new PointF();
-    private PointF start    = new PointF();
+    private PointF lastPositionTaped = new PointF();
+    private PointF startPositionTaped = new PointF();
     private float minScaleTranslation = 1f;
     private float maxScaleTranslation = 4f;
     private float minScaleZoom = 1f;
-    private float maxScaleZoom = 3f;
+    private float maxScaleZoom = 2.5f;
 
     private float[] matrixValues;
 
@@ -50,6 +50,9 @@ public class ZoomableImageView extends AppCompatImageView {
             , imageViewHeightScaling            // Altura da imagem apos aplicar a operacao de Scale sobre a altura intrinseca da image
             , mWidthImageView                   // Largura (raw/bruta) original da ImageView pega atraves do metodo getMeasuredWidth()
             , mHeightImageView;                 // Altura (raw/bruta) original da ImageView pega atraves do metodo getMeasuredHeight()
+
+    private float scaleDoubleTap = 1f;
+    private boolean applyScaleDoubleTap = false;
 
     private ScaleGestureDetector mScaleDetector;
     private MyGestureDetector gestureDetector;
@@ -72,8 +75,6 @@ public class ZoomableImageView extends AppCompatImageView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        int action = event.getAction() & MotionEvent.ACTION_MASK;
-        Log.i("ON_TOUCH_EVENT", String.format("ACTION %d", action));
         implTouch(event);
         return true;
     }
@@ -88,50 +89,94 @@ public class ZoomableImageView extends AppCompatImageView {
         };
     }
 
-    @Override
-    public boolean callOnClick() {
-        return true;
+    private void init(Context context) {
+        super.setClickable(true);
+        this.context = context;
+        this.mScaleDetector = new ScaleGestureDetector(context, new MyScaleListener());
+        this.matrix.setTranslate(1f, 1f);
+        this.matrixValues = new float[9];
+        setImageMatrix(matrix);
+        /**
+         * Log.i("MATRIX_INIT", matrix.toString());
+         * Definindo o modo de operacao de scale sera feito na ImageView
+         * */
+        setScaleType(ScaleType.MATRIX);
+        // nao preciso implementar OnTouchListener
+        //setOnTouchListener(getOnTouchListener());
+        GestureDetector.SimpleOnGestureListener simpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                setScaleType(ScaleType.MATRIX);
+                float width = getWidth(), height = getHeight();
+                applyScaleDoubleTap = ! applyScaleDoubleTap;
+                scaleDoubleTap = applyScaleDoubleTap ? scaleDoubleTap * 1.7f : scaleDoubleTap / 1.7f;
+                matrixDoubleTap.postScale(scaleDoubleTap, scaleDoubleTap, width / 2, height / 2);
+                setImageMatrix(matrix);
+                invalidate();
+                Log.i("ON_DOUBLE_TAP", String.format("%f Apply Double Tap %s.\n Matrix %s"
+                        , scaleDoubleTap,  applyScaleDoubleTap, matrix.toString()));
+                return true;
+            }
+
+            @Override
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                Log.i("ON_DOUBLE_TAP_EVENT", "DOUBLE_TAP");
+                return true;
+            }
+
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                Log.i("ON_SINGLE_TAP_CONF", "SINGLE_TAP");
+                return super.onSingleTapConfirmed(e);
+            }
+        };
+        this.gestureDetector = new MyGestureDetector(context, simpleOnGestureListener);
     }
 
     private void implTouch(MotionEvent event) {
         mScaleDetector.onTouchEvent(event);
         matrix.getValues(matrixValues);
         /**
-         *
+         * Constantes
          * {@link Matrix.MPERSP_0}, {@link Matrix.MPERSP_1}, {@link Matrix.MPERSP_2}
          * {@link Matrix.MSCALE_X}, {@link Matrix.MSCALE_Y}
-         *
+         * {@link Matrix.MSKEW_X}, {@link Matrix.MSKEW_Y}
+         * {@link Matrix.ScaleToFit}
          * */
         float translateX = matrixValues[Matrix.MTRANS_X];
         float translateY = matrixValues[Matrix.MTRANS_Y];
-        //
+        // acao realizada ao tocar na tela
         int action = event.getAction() & MotionEvent.ACTION_MASK;
-        //
-        /*
-        Log.i("ON_TOUCH", String.format("Action (Masked : %d Masked: %d UnMasked: %d).\nIndex %d"
-                , action, event.getActionMasked(), event.getAction(), event.getActionIndex()));
-        */
-        Log.i("ON_TOUCH", String.format("Transalate %f %f", translateX, translateY));
+        // posicao atual tocada
+        float currentX = event.getX();
+        float currentY = event.getY();
+        Log.i("ON_TOUCH", String.format("Ponto(%f, %f).", currentX, currentY));
         /**
          * Ponto da tela
+         * A coordenada de dispositivo
+         * da esq -> dir X
+         * de cima -> baixo y
+         *
          * */
-        PointF currentPoint = new PointF(event.getX(), event.getY());
+        PointF currentPositionTaped = new PointF(currentX, currentY);
         switch (action) {
             /**
              * Gesto de pressionar a tela
              * */
             case MotionEvent.ACTION_DOWN:
-                last.set(event.getX(), event.getY());
-                start.set(last);
+                currentX = event.getX();
+                currentY = event.getY();
+                lastPositionTaped.set(currentX, currentY);
+                startPositionTaped.set(lastPositionTaped);
                 mode = DRAG;
                 break;
             /**
              * Gesto de remover o dedo da tela
              * */
             case MotionEvent.ACTION_UP:
-                int diffX = (int) Math.abs(currentPoint.x - start.x);
-                int diffY = (int) Math.abs(currentPoint.y - start.y);
-                Log.i("ACTION_UP", String.format("DIFFXY (%d %d)\n", diffX, diffY));
+                int diffX = (int) Math.abs(currentPositionTaped.x - startPositionTaped.x);
+                int diffY = (int) Math.abs(currentPositionTaped.y - startPositionTaped.y);
+                //Log.i("ACTION_UP", String.format("DIFFXY (%d %d)\n", diffX, diffY));
                 if(diffX < CLICK && diffY < CLICK) {
                     /**
                      * Executa um click se OnclickListener tiver sido implementado
@@ -158,52 +203,52 @@ public class ZoomableImageView extends AppCompatImageView {
                  * */
                 if(mode == ZOOM || (mode == DRAG && saveScaleTransalation > minScaleTranslation && saveScaleTransalation < maxScaleTranslation)) {
                     Log.i("ACTION_MOVE", String.format("%s", mode == ZOOM ? "ZOOM" : "DRAG"));
-                    float deltaX = currentPoint.x - last.x;
-                    float deltaY = currentPoint.y - last.y;
+                    float deltaX = currentPositionTaped.x - lastPositionTaped.x;
+                    float deltaY = currentPositionTaped.y - lastPositionTaped.y;
                     float proportionalWidth   = Math.round(imageViewWidthScaling * saveScaleTransalation);
                     float proportionalHeight  = Math.round(imageViewHeightScaling * saveScaleTransalation);
-
                     int imageViewWidth   = getWidth();
                     int imageViewHeight  = getHeight();
-                    Log.i("ACTION_MOVE", String.format("DELTA XY(%f, %f)", deltaX, deltaY));
-                    Log.i("ACTION_MOVE", String.format("DIM(%d, %d)", imageViewWidth, imageViewHeight));
-                    Log.i("ACTION_MOVE", String.format("SCALE-T(%f)", saveScaleTransalation));
-                    Log.i("ACTION_MOVE", String.format("P-DIM(%f, %f)", proportionalWidth, proportionalHeight));
-
-
+                    Log.i("ACTION_MOVE", String.format("ANTES DELTAXY(%f, %f)", deltaX, deltaY));
+                    Log.i("ACTION_MOVE", String.format("SCALE(%f)", saveScaleTransalation));
+                    Log.i("ACTION_MOVE", String.format("ORIGIN-DIM(%d, %d)", imageViewWidth, imageViewHeight));
+                    Log.i("ACTION_MOVE", String.format("SCALE-DIM(%f, %f)", proportionalWidth, proportionalHeight));
+                    Log.i("ACTION_MOVE", String.format("Transalate (%f,%f)", translateX, translateY));
+                    Log.i("ACTION_MOVE", "\n");
                     boolean restrictMovimentX  = false, restrictMovimentY  = false;
-
                     /**
                      * Se a imagem ainda cabe na tela restringir o movimento para esquerda/direita
                      * e para cima e para baixo
                      * */
-                    if(proportionalWidth <= imageViewWidth && proportionalHeight <= imageViewHeight) {}
-
+                    if(proportionalWidth <= imageViewWidth && proportionalHeight <= imageViewHeight) {
+                        break;
+                    }
                     /**
                      * Apos aplicar a operacao de escala na largura da imagem original
                      * a imagem resultante tem a largura menor que a original ?
+                     *
+                     * Coordenada Y, da esquerda da tela para direita
+                     *
                      * */
                     else if (proportionalWidth < imageViewWidth) {
-                        /**
-                         *
-                         * */
+                        //
                         deltaX = 0;
                         restrictMovimentY = true;
                     }
                     /**
                      * E a altura ?
+                     * Coordenada X do topo da tela ate a base
                      * */
                     else if(proportionalHeight < imageViewHeight) {
                         deltaY = 0;
                         restrictMovimentX = true;
                     }
-
                     else {
                         restrictMovimentY = true;
                         restrictMovimentX = true;
                     }
-
-                    if(  restrictMovimentY ) {
+                    // movimentos da esquerda para direita
+                    if( restrictMovimentY ) {
                         if(translateY + deltaY >  0) {
                             deltaY = -translateY;
                         }
@@ -211,18 +256,18 @@ public class ZoomableImageView extends AppCompatImageView {
                             deltaY = -(translateY + bottom);
                         }
                     }
-
-                    if(  restrictMovimentX ) {
+                    // movimento de cima para baixo
+                    if( restrictMovimentX ) {
                         if(translateX + deltaX > 0) {
-                            deltaX -= translateX;
+                            deltaX = -translateX;
                         }
                         else if(translateX + deltaX < -right) {
                             deltaX = -(translateX + right);
                         }
                     }
-                    Log.i("ACTION_MOVE", String.format("DELTA XY(%f, %f)", deltaX, deltaY));
+                    Log.i("ACTION_MOVE", String.format("DEPOIS DELTAXY(%f, %f)", deltaX, deltaY));
                     matrix.postTranslate(deltaX, deltaY);
-                    last.set(currentPoint.x, currentPoint.y);
+                    lastPositionTaped.set(currentPositionTaped.x, currentPositionTaped.y);
                 }
                 break;
 
@@ -232,8 +277,10 @@ public class ZoomableImageView extends AppCompatImageView {
              * o evento (MotionEvent.ACTION_POINTER_DOWN) e executado
              * */
             case MotionEvent.ACTION_POINTER_DOWN:
-                last.set(event.getX(), event.getY());
-                start.set(last);
+                currentX = event.getX();
+                currentY = event.getY();
+                lastPositionTaped.set(currentX, currentY);
+                startPositionTaped.set(lastPositionTaped);
                 mode = ZOOM;
                 break;
             /**
@@ -244,52 +291,12 @@ public class ZoomableImageView extends AppCompatImageView {
              * dedo for removido da tela, o evento ACTION_UP sera executado
              * */
             case MotionEvent.ACTION_POINTER_UP:
-                Log.i("ACTION_POINTER_UP", "ACTION_POINTER_UP");
                 mode = NONE;
                 break;
         }
-        this.gestureDetector.onTouchEvent(event);
+        gestureDetector.onTouchEvent(event);
         setImageMatrix(matrix);
         invalidate();
-    }
-
-
-    private void init(Context context) {
-        this.context = context;
-        this.mScaleDetector = new ScaleGestureDetector(context, new MyScaleListener());
-        this.matrix.setTranslate(1f, 1f);
-        this.matrixValues = new float[9];
-        setImageMatrix(matrix);
-        Log.i("MATRIX_INIT", matrix.toString());
-        /**
-         *
-         * Definindo o modo de operacao de scale sera feito na ImageView
-         * */
-        setScaleType(ScaleType.MATRIX);
-        // nao preciso implementar OnTouchListener
-        //setOnTouchListener(getOnTouchListener());
-
-        GestureDetector.SimpleOnGestureListener simpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
-            @Override
-            public boolean onDoubleTap(MotionEvent e) {
-                Log.i("ON_DOUBLE_TAP", "DOUBLE_TAP");
-                return true;
-            }
-
-            @Override
-            public boolean onDoubleTapEvent(MotionEvent e) {
-                Log.i("ON_DOUBLE_TAP_EVENT", "DOUBLE_TAP");
-                return true;
-            }
-
-            @Override
-            public boolean onSingleTapConfirmed(MotionEvent e) {
-                Log.i("ON_SINGLE_TAP_CONF", "SINGLE_TAP");
-                return super.onSingleTapConfirmed(e);
-            }
-        };
-
-        this.gestureDetector = new MyGestureDetector(context, simpleOnGestureListener);
     }
 
     @Override
@@ -317,18 +324,16 @@ public class ZoomableImageView extends AppCompatImageView {
                 , intrWidth
                 , intrHeight)
         );
-
         matrix.setScale(scale, scale);
         saveScaleTransalation = 1f;
         // tamanho original
-        imageViewWidthScaling = scale * intrWidth;
-        imageViewHeightScaling = scale * intrHeight;
+        imageViewWidthScaling   = scale * intrWidth;
+        imageViewHeightScaling  = scale * intrHeight;
         Log.i("ON_MEASURE", String.format("Dimensao pos Scaling(%f, %f)\n Escala %f", imageViewWidthScaling, imageViewHeightScaling, scale));
         diffRawScalingHeight    = (mHeightImageView - imageViewHeightScaling);
         diffRawScalingWidth     = (mWidthImageView - imageViewWidthScaling);
         float midRawWidth       = diffRawScalingWidth / 2.0f;
         float midRawHeight      = diffRawScalingHeight / 2.0f;
-
         Log.i("ON_MEASURE", String.format("Centro da imagem (%f, %f).\nTransalacao (%f, %f)."
                 , diffRawScalingWidth
                 , diffRawScalingHeight
@@ -336,7 +341,6 @@ public class ZoomableImageView extends AppCompatImageView {
                 , midRawHeight
             )
         );
-
         matrix.postTranslate(midRawWidth, midRawHeight);
         setImageMatrix(matrix);
     }
@@ -367,6 +371,9 @@ public class ZoomableImageView extends AppCompatImageView {
             );
         }
 
+        /**
+         *
+         * */
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             /**
@@ -414,7 +421,6 @@ public class ZoomableImageView extends AppCompatImageView {
 
         @Override
         public boolean onScaleBegin(ScaleGestureDetector detector) {
-            Log.i("ON_SCALE_MY_LISTENER", "ON_SCALE_BEGIN");
             mode = ZOOM;
             return true;
         }
@@ -432,7 +438,4 @@ public class ZoomableImageView extends AppCompatImageView {
         Drawable drawable = getDrawable();
         return  drawable != null ? drawable.getIntrinsicHeight() : 0;
     }
-
-
-
 }
