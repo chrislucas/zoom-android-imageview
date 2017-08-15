@@ -385,7 +385,6 @@ public class ZoomableImageView extends AppCompatImageView {
              * @return The current scaling factor.
              */
             float scaleFactor = detector.getScaleFactor();
-
             float newScale = saveScaleTransalation * scaleFactor;
             Log.i("ON_SCALE_MY_LISTENER", String.format("ON_SCALE - New Scale %f", newScale));
             /**
@@ -417,11 +416,14 @@ public class ZoomableImageView extends AppCompatImageView {
                         , scaleBitmapHeight
                         , scaleFactor
                 ));
+
                 if(scaleBitmapWidth < width || scaleBitmapHeight < height) {
                     matrix.postScale(scaleFactor, scaleFactor, width / 2, height / 2);
                 }
                 else {
-                    matrix.postScale(scaleFactor, scaleFactor, detector.getFocusX(), detector.getFocusY());
+                    float detectFocusPx = detector.getFocusX(), detectFocusPy = detector.getFocusY();
+                    Log.i("LISTENER_ACTION_MOVE", String.format("Detect Focus (%f %f)", detectFocusPx, detectFocusPy));
+                    matrix.postScale(scaleFactor, scaleFactor, detectFocusPx, detectFocusPy);
                 }
             }
             return true;
