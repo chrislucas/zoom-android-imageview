@@ -99,37 +99,94 @@ public class Triangle extends View {
         path = new Path();
         boolean landscapeMode = w > h;
         Log.i("ONSIZE_CHANGED", String.format("Dim(%d,%d)", w, h));
-
         /**
          * Preparando Scale e Move para trocar de escala logica para de dispositivo
          * */
         if(landscapeMode)
         {
             /**
-             * setScale(h, -h)
+             * setScale(int h, int -h)
+             * A tela do dispositivo eh vista como um plano cartesiano, porem o eixo
+             * da coordenada e invertido, de cima para baixo com o eixo Y e da esquerda para
+             * direita com o eixo X.
              *
-             * Girando a coordenada de dispositivo
+             * Para podermos trabalhar com um tipo de coordenada mais comum, onde o o eixo
+             * Y cresce de baixo para cima, nos transformamos o valor maximo da altura da tela em que
+             * estamos trabalhando em negativo. A forma que o Sistema desenha na tela nao muda, se pedirmos
+             * para desenhar um pixel no ponto (0,0) o sistema desenhara no canto superior esquerdo da tela
+             * se quisermos que o desenho seja feito no canto inferior esquerdo, como estamos acostumados,
+             * devemos fazer a seguinte conta, (alturaMaxima - pontoYQueDesejamosDesenha)
+             * Por exemplo: Numa tela 100x100, se quisermos que o nosso desenho tenha origem no canto
+             * inferior esquerdo da tela, sempre que informarmos um valor de Y para um ponto onde
+             * devemos fazer a conta 100 - Y. Um exemplo pratico, desenhar uma reta que parta do ponto
+             * A(0, 0) e va ate o ponto B(10, 0), e que essa reta fique no canto inferior da tela.
+             * O pontos A e B terao que ser convertidos para Aa(0, 100 - 0), Bb(0, 100 - 0) para
+             * que sua reta seja desenhada no lugar que se deseja
              *
+             * Por isso a funcao setScale recebe os pontos (h, -h) quando esta em landscape
+             * e (w, -w) quando esta em portrait
              * */
-            transformation.setScale(new Transformation.FloatPair(h, -h));
-            int ratio = (w-h)/2;
-            //int ratio = w/2;
+
             /**
+             * {@link Transformation#setScale(Transformation.FloatPair)}
+             *
+             * Definindo a escala que sera usada para transformar as coordenadas
+             * logicas em coordenadas de dispositivos. Como explicado acima, como
+             * na coordenada de dispositivo, os valores de Y variam de 0 ate N
+             * porem a ela inicia no canto superior esquerdo e termina no canto inferior
+             * esquerdo. Assim para limitar o desenho dentro da telam o valor de Y na escaka
+             * eb definido como -N
+             *
+             * */
+            /**
+             * {@link Transformation#setMove(Transformation.FloatPair)}
+             *
+             * setMove(move.x, move.y)
+             *
+             * Apos definir a escala usamos o metodo acima para definir o ponto de origem
+             * na coordenada de dispostivo
+             *
+             * Quando quando quisermos desenha um ponto especifico na tela, esse ponto sera
+             * pintado entre os pontos P1(move.x - x * scale.x, -min(w,h))  e P2(move.y - y * scale, -min(w, h))
+             *
+             * As formula
+             *  move.x + x * scale.x
+             *  move.y + y * scale.y
+             *  indicam que o desenho sera feito a partir da origem (move.x, move.y) que seria
+             *  o canto superior da nova coordenada.
+             *  (move.x + x * scale.x; move.y + y * scale.y) faz a conversao
+             *  da coordenada logica para dispositivo e como Y eh negativo, limitamos a area de desenho
+             *  para uma area visivel na tela
              *
              *
              * */
-            transformation.setMove(new Transformation.FloatPair(ratio, h));
+            //transformation.setScale(new Transformation.FloatPair(w, -h));
+            //transformation.setMove(new Transformation.FloatPair(0, h));
+            //transformation.setScale(new Transformation.FloatPair(h, -h));
+            //transformation.setMove(new Transformation.FloatPair(ratio, h));
+            int ratio = (w-h)/2;
+            Transformation.FloatPair scale = new Transformation.FloatPair(w, -h);
+            Transformation.FloatPair translate = new Transformation.FloatPair(0, h);
+            defineCoordenates(scale, translate);
         }
         else
         {
-            transformation.setScale(new Transformation.FloatPair(w, -w));
-            int ratio = (h-w)/2;
-            //int ratio = h/2;
             /**
-             * Em landscape os desenhos sao
              *
              * */
-            transformation.setMove(new Transformation.FloatPair(0, h - ratio));
+            //transformation.setScale(new Transformation.FloatPair(w, -h));
+            //transformation.setMove(new Transformation.FloatPair(0, h));
+
+            int ratio = h - (h-w)/2;
+            /**
+             *
+             *
+             * */
+            //transformation.setScale(new Transformation.FloatPair(w, -w));
+            //transformation.setMove(new Transformation.FloatPair(0, ratio));
+            Transformation.FloatPair scale = new Transformation.FloatPair(w, -h);
+            Transformation.FloatPair translate = new Transformation.FloatPair(0, h);
+            defineCoordenates(scale, translate);
         }
         Log.i("ONSIZE_CHANGED", String.format("%s\n%s"
                 , landscapeMode ? "LAND" : "PORTRAIT", transformation.toString()));
@@ -141,8 +198,8 @@ public class Triangle extends View {
         float pointAY = transformation.transformY(.1f);
         float pointBX = transformation.transformX(.8f);
         float pointBY = transformation.transformY(.8f);
-        float pointCX = transformation.transformX(.8f);
-        float pointCY = transformation.transformY(.2f);
+        float pointCX = transformation.transformX(.85f);
+        float pointCY = transformation.transformY(.1f);
 
         String strTransformation = String.format("A(%f, %f); B(%f, %f); C(%f, %f)"
                 , pointAX, pointAY, pointBX, pointBY, pointCX, pointCY);
@@ -157,6 +214,11 @@ public class Triangle extends View {
         path.lineTo(pointCX, pointCY);
         //
         path.close();
+    }
+
+    private void defineCoordenates(Transformation.FloatPair scale, Transformation.FloatPair translate) {
+        transformation.setScale(scale);
+        transformation.setMove(translate);
     }
 
     @Override
